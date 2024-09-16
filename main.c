@@ -13,7 +13,7 @@ int main(){
     const char * filename = "b_tree.dat"; // Nome do arquivo para salvar e carregar a árvore
 
     //Criação da árvore com ordem 4
-    create_tree(&my_tree, 6, false);
+    create_tree(&my_tree, 6, true);
 
     //Criando um vetor de números para inserir nas árvores
     int keys_to_insert[] = {
@@ -46,10 +46,13 @@ int main(){
     //Imprimindo os metadados da árvore no terminal
     print_metadata(my_tree);
 
+    //folhas
+
+
     //Removendo algumas chaves
     remove_key(&my_tree, 137);
     remove_key(&my_tree, 177);
-    remove_key(&my_tree, 76);
+    remove_key(&my_tree, 76); 
     remove_key(&my_tree, 77);
     remove_key(&my_tree, 68);
 

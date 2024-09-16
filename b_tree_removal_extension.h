@@ -28,7 +28,7 @@ Parâmetros:
 Valor de retorno:
     void - Nenhum
 */
-void remove_key(tree *tree, int key){
+void remove_key(tree * tree, int key){
     //Variáveis locais
     node root = tree->header;
     int idx;
@@ -39,24 +39,30 @@ void remove_key(tree *tree, int key){
         return;
     }
 
-    //Remove a chave da raiz
-    remove_from_node(root, key, tree->order, &tree->node_num, &tree->key_num);
+    //Verificando se a chave existe na árvore
+    if(!(search_key(tree->header, key))){
+        printf("\nERROR: remove_key - Key doesn't exist!\n");
+    }
+    else{
+        //Remove a chave da raiz
+        remove_from_node(root, key, tree->order, &tree->node_num, &tree->key_num);
 
-    //Ajusta a raiz se necessário
-    if(root->key_num == 0){
-        if(root->leaf){
-            //Se a raiz é uma folha e não contém chaves, remove a raiz
-            free(root->key);
-            free(root->next);
-            free(root);
-            tree->header = NULL;
-        } else {
-            //Se a raiz tem filhos, faz o primeiro filho se tornar a nova raiz
-            node old_root = root;
-            tree->header = root->next[0];
-            free(old_root->key);
-            free(old_root->next);
-            free(old_root);
+        //Ajusta a raiz se necessário
+        if(root->key_num == 0){
+            if(root->leaf){
+                //Se a raiz é uma folha e não contém chaves, remove a raiz
+                free(root->key);
+                free(root->next);
+                free(root);
+                tree->header = NULL;
+            } else {
+                //Se a raiz tem filhos, faz o primeiro filho se tornar a nova raiz
+                node old_root = root;
+                tree->header = root->next[0];
+                free(old_root->key);
+                free(old_root->next);
+                free(old_root);
+            }
         }
     }
 }
@@ -141,14 +147,16 @@ Valor de retorno:
     void - Nenhum
 */
 void remove_from_non_leaf(node node, int idx, int order, int * node_num, int * key_num){
-    int key = node->key[idx];
+    int key, predecessor;
+    
+    key = node->key[idx];
     
     if(node->next[idx]->key_num >= (order - 1) / 2){
-        int predecessor = get_predecessor(node->next[idx], idx);
+        predecessor = get_predecessor(node, idx); //node->next[idx]
         node->key[idx] = predecessor;
         remove_from_node(node->next[idx], predecessor, order, node_num, key_num);
     } else if(node->next[idx + 1]->key_num >= (order - 1) / 2){
-        int successor = get_successor(node->next[idx + 1], idx);
+        int successor = get_successor(node, idx+1); //node->next[idx + 1]
         node->key[idx] = successor;
         remove_from_node(node->next[idx + 1], successor, order, node_num, key_num);
     } else {
@@ -169,6 +177,7 @@ Valor de retorno:
 int get_predecessor(node node, int idx){
     //Vai até o nó folha mais à direita da subárvore
     struct nodeStruct * current = node->next[idx];
+
     while (!current->leaf){
         current = current->next[current->key_num];
     }

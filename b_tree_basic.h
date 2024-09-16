@@ -11,7 +11,8 @@
 node create_node(int, bool);
 void create_tree(tree *, int, bool);
 void split_node(node, int, int, int *);
-void insert_non_full(node, int, int, int *);
+void redistribuir_no(node, int, int);
+void insert_non_full(node, int, int, int *, bool);
 void insert_key(tree *, int);
 int search_key(node, int);
 void print_spaces(int);
@@ -144,6 +145,67 @@ void split_node(node parent, int i, int order, int * node_num){
 }
 
 /*
+Nome: redistribuir_no
+Objetivo: Redistribui as chaves entre dois nós irmãos para evitar a divisão
+Parâmetros: 
+    node parent - Nó pai que contém os dois nós irmãos
+    int i - Índice no vetor de ponteiros do nó pai para o nó onde a chave será inserida
+    int order - Ordem da árvore B
+    int * node_num - Número de nós da árvore passado por referência para eventuais modificações
+Valor de retorno:
+    void - Nenhum
+*/
+void redistribuir_no(node parent, int i, int order) {
+    node esquerdo = parent->next[i];       // Nó à esquerda do irmão
+    node direito = parent->next[i + 1];    // Nó à direita do irmão
+
+    // Se o nó esquerdo tiver menos chaves que o direito, redistribui do direito para o esquerdo
+    if (esquerdo->key_num < direito->key_num) {
+        // Mover a primeira chave do nó direito para o pai
+        esquerdo->key[esquerdo->key_num] = parent->key[i];
+        esquerdo->key_num++;
+
+        // Mover a primeira chave do nó direito para o nó pai
+        parent->key[i] = direito->key[0];
+
+        // Ajusta as chaves no nó direito
+        for (int j = 0; j < direito->key_num - 1; j++) {
+            direito->key[j] = direito->key[j + 1];
+        }
+
+        // Se o nó direito não for folha, ajuste os ponteiros dos filhos
+        if (!direito->leaf) {
+            esquerdo->next[esquerdo->key_num] = direito->next[0];
+            for (int j = 0; j < direito->key_num; j++) {
+                direito->next[j] = direito->next[j + 1];
+            }
+        }
+        direito->key_num--;
+
+    // Caso contrário, redistribui do nó esquerdo para o nó direito
+    } else if (esquerdo->key_num > direito->key_num) {
+        // Mover a última chave do nó esquerdo para o pai
+        for (int j = direito->key_num; j > 0; j--) {
+            direito->key[j] = direito->key[j - 1];
+        }
+        direito->key[0] = parent->key[i];
+        direito->key_num++;
+
+        // Mover a última chave do nó esquerdo para o nó pai
+        parent->key[i] = esquerdo->key[esquerdo->key_num - 1];
+        esquerdo->key_num--;
+
+        // Se o nó esquerdo não for folha, ajuste os ponteiros dos filhos
+        if (!esquerdo->leaf) {
+            for (int j = direito->key_num; j > 0; j--) {
+                direito->next[j] = direito->next[j - 1];
+            }
+            direito->next[0] = esquerdo->next[esquerdo->key_num + 1];
+        }
+    }
+}
+
+/*
 Nome: insert_non_full
 Objetivo: Insere uma chave em um nó não cheio
 Parâmetros: 
@@ -154,7 +216,7 @@ Parâmetros:
 Valor de retorno:
     void - Nenhum
 */
-void insert_non_full(node node, int key, int order, int * node_num){
+void insert_non_full(node node, int key, int order, int * node_num, bool asterisk){
     //Variáveis locais
     int i;
 
@@ -186,17 +248,31 @@ void insert_non_full(node node, int key, int order, int * node_num){
 
         //Verifica se o filho onde a chave deve ser inserida está cheio
         if(node->next[i]->key_num == order - 1){
-            //Divide o filho
-            split_node(node, i, order, node_num);
+            //Se a árvore for do tipo B* tenta realizar uma redistribuição antes de dividir o nó
+            if(asterisk){
+                //Tenta redistribuir com o nó irmão esquerdo ou direito
+                if(i > 0 && node->next[i - 1]->key_num < order - 1){
+                    redistribuir_no(node, i - 1, order);
+                }
+                else if(i < node->key_num && node->next[i + 1]->key_num < order - 1){
+                    redistribuir_no(node, i, order);
+                }
+            }
 
-            //Define em qual dos dois filhos da divisão a chave será inserida
-            if(node->key[i] < key){
-                i++;
+            //Se o nó continuar cheio, o divide
+            if(node->next[i]->key_num == order - 1){
+                //Divide o filho
+                split_node(node, i, order, node_num);
+
+                //Define em qual dos dois filhos da divisão a chave será inserida
+                if(node->key[i] < key){
+                    i++;
+                }
             }
         }
 
         //Insere no filho adequado
-        insert_non_full(node->next[i], key, order, node_num);
+        insert_non_full(node->next[i], key, order, node_num, asterisk);
     }
 }
 
@@ -211,45 +287,52 @@ Valor de retorno:
 */
 void insert_key(tree * tree, int key){
     //Variaveis locais
+    int verify;
     node aux, new_node;
 
-    //Nosso nó auxiliar aponta para o nó raiz da árvore
-    aux = tree->header;
-
-    //Caso onde a raiz está cheia
-    if(aux->key_num == tree->order - 1){
-        //Cria um novo nó para se tornar a nova raiz
-        new_node = create_node(tree->order, false);
-
-        //A nova raiz tem como filho a antiga raiz
-        new_node->next[0] = aux;
-
-        //Divide a antiga raiz, promovendo a sua chave do meio para a nova raiz
-        split_node(new_node, 0, tree->order, &tree->node_num);
-
-        //Insere a nova chave no nó adequado
-        insert_non_full(new_node, key, tree->order, &tree->node_num);
-
-        tree->header = new_node;            //Atualiza a árvore com a nova raiz
-        tree->height++;                     //Aumenta a altura da árvore
-        tree->node_num++;                   //Aumenta o número de nós na árvore
-    } 
-    else{     
-        //Obs:
-        //Esse caso trata quando á raiz não está cheia e também quando a árvore está sem chaves
-        
-        //Insere na raiz
-        insert_non_full(aux, key, tree->order, &tree->node_num);
+    //Verificando se a chave já não existe na árvore
+    if(search_key(tree->header, key)){
+        printf("\nERROR: insert_key - Key already inserted!\n");
     }
+    else{
+        //Nosso nó auxiliar aponta para o nó raiz da árvore
+        aux = tree->header;
 
-    //Atualiza a chave mínima e máxima da árvore se necessário e também incrementa seu número de chaves
-    if(tree->key_num == 0 || key > tree->max_key){
-        tree->max_key = key;
+        //Caso onde a raiz está cheia
+        if(aux->key_num == tree->order - 1){
+            //Cria um novo nó para se tornar a nova raiz
+            new_node = create_node(tree->order, false);
+
+            //A nova raiz tem como filho a antiga raiz
+            new_node->next[0] = aux;
+
+            //Divide a antiga raiz, promovendo a sua chave do meio para a nova raiz
+            split_node(new_node, 0, tree->order, &tree->node_num);
+
+            //Insere a nova chave no nó adequado
+            insert_non_full(new_node, key, tree->order, &tree->node_num, tree->asterisk);
+
+            tree->header = new_node;            //Atualiza a árvore com a nova raiz
+            tree->height++;                     //Aumenta a altura da árvore
+            tree->node_num++;                   //Aumenta o número de nós na árvore
+        } 
+        else{     
+            //Obs:
+            //Esse caso trata quando á raiz não está cheia e também quando a árvore está sem chaves
+            
+            //Insere na raiz
+            insert_non_full(aux, key, tree->order, &tree->node_num, tree->asterisk);
+        }
+
+        //Atualiza a chave mínima e máxima da árvore se necessário e também incrementa seu número de chaves
+        if(tree->key_num == 0 || key > tree->max_key){
+            tree->max_key = key;
+        }
+        if (tree->key_num == 0 || key < tree->min_key){
+            tree->min_key = key;
+        }
+        tree->key_num++;
     }
-    if (tree->key_num == 0 || key < tree->min_key){
-        tree->min_key = key;
-    }
-    tree->key_num++;
 }
 
 /*
