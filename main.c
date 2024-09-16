@@ -32,19 +32,15 @@ int main(){
     //Inserindo chaves na árvore
     printf("\nInserting keys into tree:\n");
     for(i = 0; i < num_keys; i++){
-        printf("Inserting key: %d\n", keys_to_insert[i]);
+        printf("\nInserting key: %d\n", keys_to_insert[i]);
         insert_key(&my_tree, keys_to_insert[i]);
-        if(search_key(my_tree.header, keys_to_insert[i])){
-            printf("Inserted\n");
-        }
     }
 
     //Desenhando a árvore no terminal
-    printf("\nTree drawn in the terminal:\n");
-    print_tree_graphically(my_tree.header, 0);
+    print_tree_graphically(my_tree.header);
 
     //Imprimindo os metadados da árvore no terminal
-    print_metadata(my_tree);
+    print_tree_metadata(my_tree);
 
     //folhas
 
@@ -57,11 +53,10 @@ int main(){
     remove_key(&my_tree, 68);
 
     //Desenhando a árvore no terminal
-    printf("Tree drawn in the terminal after remotions:\n");
-    print_tree_graphically(my_tree.header, 0);
+    print_tree_graphically(my_tree.header);
 
     //Imprimindo os metadados da árvore no terminal
-    print_metadata(my_tree);
+    print_tree_metadata(my_tree);
 
     //Salva a árvore em um arquivo
     save_tree_to_file(filename, &my_tree);
@@ -70,15 +65,15 @@ int main(){
     create_tree(&file_tree, my_tree.order, false);
 
     //Exibindo os metadados da árvore recém criada
-    printf("\n\nNew tree info:\n");
-    print_metadata(file_tree);
+    printf("\nNew tree info:\n");
+    print_tree_metadata(file_tree);
 
     //Carregando a árvore recem criada com dados da outra árvore
     load_tree_from_file(filename, &file_tree);
 
     //Imprimindo os metadados da árvore recém criada novamente
-    printf("\n\nNew tree info after load from file:\n");
-    print_metadata(file_tree);
+    printf("\nNew tree info after load from file:\n");
+    print_tree_metadata(file_tree);
 
     //Finalização do programa
     return 0;

@@ -24,14 +24,20 @@ Valor de retorno:
     void - Nenhum
 */
 void save_node_to_file(FILE * file, node n, int order){
+    //Variáveis locais
+    int i;
+
+    //verificando se o nó a ser salvo é válido
     if(n == NULL){
         return;
     }
+
+    //Salvando o nó
     fwrite(&(n->key_num), sizeof(int), 1, file);
     fwrite(&(n->leaf), sizeof(bool), 1, file);
     fwrite(n->key, sizeof(int), n->key_num, file);
     if(!n->leaf){
-        for (int i = 0; i <= n->key_num; i++){
+        for(i = 0; i <= n->key_num; i++){
             save_node_to_file(file, n->next[i], order);
         }
     }
@@ -47,17 +53,24 @@ Valor de retorno:
     node - Nó lido
 */
 node load_node_from_file(FILE * file, int order){
-    node n = create_node(order, false);
+    //Variáveis locais
+    node n;
+    int i;
+
+    //Importando o nó do arquivo
+    n = create_node(order, false);
     fread(&(n->key_num), sizeof(int), 1, file);
     fread(&(n->leaf), sizeof(bool), 1, file);
     n->key = (int *)realloc(n->key, (order - 1) * sizeof(int));
     fread(n->key, sizeof(int), n->key_num, file);
     if(!n->leaf){
         n->next = (node *)malloc((order) * sizeof(node));
-        for (int i = 0; i <= n->key_num; i++){
+        for(i = 0; i <= n->key_num; i++){
             n->next[i] = load_node_from_file(file, order);
         }
     }
+
+    //Retornando o nó importado
     return n;
 }
 
@@ -71,11 +84,17 @@ Valor de retorno:
     void - Nenhum
 */
 void save_tree_to_file(const char * filename, tree * t){
-    FILE * file = fopen(filename, "wb");
+    //Variáveis locais
+    FILE * file;
+    
+    //Abrindo o arquivo e verificando se a abertura foi bem sucedida
+    file = fopen(filename, "wb");
     if(file == NULL){
-        printf("Erro ao abrir o arquivo para salvar a árvore.\n");
+        printf("ERROR: save_tree_to_file - fopen fail!\n");
         return;
     }
+
+    //Salvando a árvore no arquivo
     fwrite(&(t->order), sizeof(int), 1, file);
     fwrite(&(t->key_num), sizeof(int), 1, file);
     fwrite(&(t->node_num), sizeof(int), 1, file);
@@ -83,6 +102,8 @@ void save_tree_to_file(const char * filename, tree * t){
     fwrite(&(t->max_key), sizeof(int), 1, file);
     fwrite(&(t->min_key), sizeof(int), 1, file);
     save_node_to_file(file, t->header, t->order);
+
+    //Fechando o arquivo
     fclose(file);
 }
 
@@ -96,11 +117,17 @@ Valor de retorno:
     void - Nenhum
 */
 void load_tree_from_file(const char * filename, tree * t){
-    FILE *file = fopen(filename, "rb");
+    //Variáveis locais
+    FILE * file;
+
+    //Abrindo o arquivo e verificando se a abertura foi bem sucedida
+    file = fopen(filename, "rb");
     if(file == NULL){
-        printf("Erro ao abrir o arquivo para carregar a árvore.\n");
+        printf("ERROR: load_tree_from_file - fopen fail!\n");
         return;
     }
+
+    //Importando a árvore do arquivo
     fread(&(t->order), sizeof(int), 1, file);
     fread(&(t->key_num), sizeof(int), 1, file);
     fread(&(t->node_num), sizeof(int), 1, file);
@@ -108,6 +135,8 @@ void load_tree_from_file(const char * filename, tree * t){
     fread(&(t->max_key), sizeof(int), 1, file);
     fread(&(t->min_key), sizeof(int), 1, file);
     t->header = load_node_from_file(file, t->order);
+
+    //Fechando o arquivo
     fclose(file);
 }
 

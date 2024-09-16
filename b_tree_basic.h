@@ -11,13 +11,15 @@
 node create_node(int, bool);
 void create_tree(tree *, int, bool);
 void split_node(node, int, int, int *);
-void redistribuir_no(node, int, int);
+void redistribution(node, int, int);
 void insert_non_full(node, int, int, int *, bool);
 void insert_key(tree *, int);
 int search_key(node, int);
 void print_spaces(int);
-void print_tree_graphically(node, int);
-void print_metadata(tree);
+void print_spaces(int);
+void print_tree_graphically(node);
+void print_tree_graphically_recursive(node, int);
+void print_tree_metadata(tree);
 
 /*
 Nome: create_node
@@ -46,14 +48,14 @@ node create_node(int order, bool leaf){
             new_node->leaf = leaf;                                      //A identificação de nó folha segue o parâmetro passado
         }
         else{
-            printf("\nERROR: create_node - Memory allocation failure!\n");
+            printf("ERROR: create_node - Memory allocation failure!\n");
             free(new_node->key);
             free(new_node->next);
             free(new_node);
         }
     }
     else{
-        printf("\nERROR: create_node - Memory allocation failure!\n");
+        printf("ERROR: create_node - Memory allocation failure!\n");
         free(new_node);
     }
 
@@ -145,62 +147,65 @@ void split_node(node parent, int i, int order, int * node_num){
 }
 
 /*
-Nome: redistribuir_no
-Objetivo: Redistribui as chaves entre dois nós irmãos para evitar a divisão
+Nome: redistribution
+Objetivo: Redistribui se possível chaves entre dois nós irmãos
 Parâmetros: 
-    node parent - Nó pai que contém os dois nós irmãos
+    node parent - Nó pai que contém os dois nós irmãos participantes da tentativa de reditribuição
     int i - Índice no vetor de ponteiros do nó pai para o nó onde a chave será inserida
-    int order - Ordem da árvore B
+    int order - Ordem da árvore
     int * node_num - Número de nós da árvore passado por referência para eventuais modificações
 Valor de retorno:
     void - Nenhum
 */
-void redistribuir_no(node parent, int i, int order) {
-    node esquerdo = parent->next[i];       // Nó à esquerda do irmão
-    node direito = parent->next[i + 1];    // Nó à direita do irmão
+void redistribution(node parent, int i, int order){
+    //Variáveis locais
+    node left, right;
+    int j;
 
-    // Se o nó esquerdo tiver menos chaves que o direito, redistribui do direito para o esquerdo
-    if (esquerdo->key_num < direito->key_num) {
-        // Mover a primeira chave do nó direito para o pai
-        esquerdo->key[esquerdo->key_num] = parent->key[i];
-        esquerdo->key_num++;
+    //Atribui os nós direito e esquerdo que são irmãos
+    left = parent->next[i];
+    right = parent->next[i + 1];
 
-        // Mover a primeira chave do nó direito para o nó pai
-        parent->key[i] = direito->key[0];
+    //Se o nó esquerdo tiver menos chaves que o direito, redistribui do direito para o esquerdo
+    if(left->key_num < right->key_num){
+        left->key[left->key_num] = parent->key[i];      //Move uma chave do nó pai para o nó esquerdo
+        left->key_num++;                                //Atualiza o contador de chaves do nó esquerdo
+        parent->key[i] = right->key[0];                 //Move a primeira chave do nó direito para o nó pai
 
-        // Ajusta as chaves no nó direito
-        for (int j = 0; j < direito->key_num - 1; j++) {
-            direito->key[j] = direito->key[j + 1];
+        //Ajusta as chaves no nó direito
+        for(j = 0; j < right->key_num - 1; j++){
+            right->key[j] = right->key[j + 1];
         }
 
-        // Se o nó direito não for folha, ajuste os ponteiros dos filhos
-        if (!direito->leaf) {
-            esquerdo->next[esquerdo->key_num] = direito->next[0];
-            for (int j = 0; j < direito->key_num; j++) {
-                direito->next[j] = direito->next[j + 1];
+        //Se o nó direito não for folha, ajusta os ponteiros dos filhos
+        if(!right->leaf){
+            left->next[left->key_num] = right->next[0];
+            for(j = 0; j < right->key_num; j++){
+                right->next[j] = right->next[j + 1];
             }
         }
-        direito->key_num--;
 
-    // Caso contrário, redistribui do nó esquerdo para o nó direito
-    } else if (esquerdo->key_num > direito->key_num) {
-        // Mover a última chave do nó esquerdo para o pai
-        for (int j = direito->key_num; j > 0; j--) {
-            direito->key[j] = direito->key[j - 1];
+        //Atualiza o contador de chaves do nó direito
+        right->key_num--;
+    }
+    //Se o nó direito tiver menos chaves que o esquerdo, redistribui do esquerdo para o direito
+    else if(left->key_num > right->key_num){
+        //Ajusta as chaves no nó direito para receber uma chave
+        for(j = right->key_num; j > 0; j--){
+            right->key[j] = right->key[j - 1];
         }
-        direito->key[0] = parent->key[i];
-        direito->key_num++;
+        right->key[0] = parent->key[i];                 //Move uma chave do nó pai para o nó direito
+        right->key_num++;                               //Atualiza o contador de chaves do nó direito
 
-        // Mover a última chave do nó esquerdo para o nó pai
-        parent->key[i] = esquerdo->key[esquerdo->key_num - 1];
-        esquerdo->key_num--;
+        parent->key[i] = left->key[left->key_num - 1];  //Move a última chave do nó esquerdo para o nó pai
+        left->key_num--;                                //Atualiza o contador de chaves do nó esquerdo
 
-        // Se o nó esquerdo não for folha, ajuste os ponteiros dos filhos
-        if (!esquerdo->leaf) {
-            for (int j = direito->key_num; j > 0; j--) {
-                direito->next[j] = direito->next[j - 1];
+        //Se o nó esquerdo não for folha, ajusta os ponteiros dos filhos
+        if(!left->leaf){
+            for(j = right->key_num; j > 0; j--){
+                right->next[j] = right->next[j - 1];
             }
-            direito->next[0] = esquerdo->next[esquerdo->key_num + 1];
+            right->next[0] = left->next[left->key_num + 1];
         }
     }
 }
@@ -236,7 +241,10 @@ void insert_non_full(node node, int key, int order, int * node_num, bool asteris
 
         //Incrementa o número de chaves do nó
         node->key_num++;
-    } 
+
+        //Mensagem de inserção bem sucedida
+        printf("%d inserted\n", key);
+    }
     else{
         //Se o nó não é uma folha precisamos encontrar o filho adequado
         while(i >= 0 && node->key[i] > key){
@@ -252,10 +260,10 @@ void insert_non_full(node node, int key, int order, int * node_num, bool asteris
             if(asterisk){
                 //Tenta redistribuir com o nó irmão esquerdo ou direito
                 if(i > 0 && node->next[i - 1]->key_num < order - 1){
-                    redistribuir_no(node, i - 1, order);
+                    redistribution(node, i - 1, order);
                 }
                 else if(i < node->key_num && node->next[i + 1]->key_num < order - 1){
-                    redistribuir_no(node, i, order);
+                    redistribution(node, i, order);
                 }
             }
 
@@ -290,9 +298,9 @@ void insert_key(tree * tree, int key){
     int verify;
     node aux, new_node;
 
-    //Verificando se a chave já não existe na árvore
+    //Verifica se a chave já não existe na árvore
     if(search_key(tree->header, key)){
-        printf("\nERROR: insert_key - Key already inserted!\n");
+        printf("ERROR: insert_key - Key already inserted!\n");
     }
     else{
         //Nosso nó auxiliar aponta para o nó raiz da árvore
@@ -306,7 +314,7 @@ void insert_key(tree * tree, int key){
             //A nova raiz tem como filho a antiga raiz
             new_node->next[0] = aux;
 
-            //Divide a antiga raiz, promovendo a sua chave do meio para a nova raiz
+            //Divide a antiga raiz, promove a sua chave do meio para a nova raiz
             split_node(new_node, 0, tree->order, &tree->node_num);
 
             //Insere a nova chave no nó adequado
@@ -315,7 +323,7 @@ void insert_key(tree * tree, int key){
             tree->header = new_node;            //Atualiza a árvore com a nova raiz
             tree->height++;                     //Aumenta a altura da árvore
             tree->node_num++;                   //Aumenta o número de nós na árvore
-        } 
+        }
         else{     
             //Obs:
             //Esse caso trata quando á raiz não está cheia e também quando a árvore está sem chaves
@@ -328,7 +336,7 @@ void insert_key(tree * tree, int key){
         if(tree->key_num == 0 || key > tree->max_key){
             tree->max_key = key;
         }
-        if (tree->key_num == 0 || key < tree->min_key){
+        if(tree->key_num == 0 || key < tree->min_key){
             tree->min_key = key;
         }
         tree->key_num++;
@@ -383,65 +391,80 @@ void print_spaces(int level){
     int i;
 
     //Imprime os espaços
-    for (i = 0; i < level; i++){
+    for(i = 0; i < level; i++){
         printf("   ");
     }
 }
 
 /*
 Nome: print_tree_graphically
-Objetivo: Imprimir a árvore de forma "gráfica" no terminal
+Objetivo: Imprimir uma árvore de forma "gráfica" no terminal
 Parâmetros:
     node root - Nó raiz da árvore a ser impressa
-    int level - Nível atual da árvore para controlar a identação
 Valor de retorno:
     void - Nenhum
 */
-void print_tree_graphically(node root, int level){
-    //Variáveis locais
-    int i;
-
+void print_tree_graphically(node root){
+    //Verifica se a árvore não é vazia
     if(root == NULL){
+        printf("ERROR: print_tree_graphically - root equal NULL!:\n");
         return;
     }
+
+    //Mensagem de execução 
+    printf("\nTree drawing:\n");
+
+    //Chamada da função recursiva para impressão da árvore
+    print_tree_graphically_recursive(root, 0);
+}
+
+/*
+Nome: print_tree_graphically_recursive
+Objetivo: Imprimir uma árvore de forma "gráfica" no terminal
+Parâmetros:
+    node node - Nó da árvore a ser impressa
+    int level - Nível atual da árvore para controlar a identação (permitindo recursão)
+Valor de retorno:
+    void - Nenhum
+*/
+void print_tree_graphically_recursive(node node, int level){
+    //Variáveis locais
+    int i;
 
     //Imprime o nó atual com indentação baseada no nível
     print_spaces(level);
     printf("|--");
 
     //Imprime as chaves do nó atual
-    for(i = 0; i < root->key_num; i++){
-        printf("%d ", root->key[i]);
+    for(i = 0; i < node->key_num; i++){
+        printf("%d ", node->key[i]);
     }
     printf("\n");                           //Apenas para embelezamento
 
     //Se o nó não é folha, imprime recursivamente os filhos
-    if(!root->leaf){
-        for(i = 0; i <= root->key_num; i++){
-            print_tree_graphically(root->next[i], level + 1);
+    if(!node->leaf){
+        for(i = 0; i <= node->key_num; i++){
+            print_tree_graphically_recursive(node->next[i], level + 1);
         }
     }
 }
 
 /*
-Nome: print_metadata
-Objetivo: Imprimir a árvore de forma "gráfica" no terminal
+Nome: print_tree_metadata
+Objetivo: Imprimir as informações de cabeçalho de uma árvore
 Parâmetros:
-    node root - Nó raiz da árvore a ser impressa
-    int level - Nível atual da árvore para controlar a identação
+    tree tree - Árvore a ter seus dados impressos
 Valor de retorno:
     void - Nenhum
 */
-void print_metadata(tree tree){
-    printf("\n");                                         //Embelezamento
-    printf("TREE INFORMATION\n");
+void print_tree_metadata(tree tree){
+    printf("\nTree Data\n");
     printf("Order: %d\n", tree.order);
     printf("Number of Nodes: %d\n", tree.node_num);
     printf("Number of Keys: %d\n", tree.key_num);
     printf("Height: %d\n", tree.height);
     printf("Max Key: %d\n", tree.max_key);
     printf("Min Key: %d\n", tree.min_key);
-    printf("\n");                                         //Embelezamento
 }
 
 #endif
