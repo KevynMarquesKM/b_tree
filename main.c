@@ -10,9 +10,9 @@ int main(){
     //Variáveis locais
     tree my_tree, file_tree;
     int i, random_key, result, num_keys;
-    const char * filename = "b_tree.dat"; // Nome do arquivo para salvar e carregar a árvore
+    const char * filename = "b_tree.dat"; //Nome do arquivo para salvar e carregar a árvore
 
-    //Criação da árvore com ordem 4
+    //Criação da árvore com ordem 6
     create_tree(&my_tree, 6, true);
 
     //Criando um vetor de números para inserir nas árvores
@@ -41,9 +41,6 @@ int main(){
 
     //Imprimindo os metadados da árvore no terminal
     print_tree_metadata(my_tree);
-
-    //folhas
-
 
     //Removendo algumas chaves
     remove_key(&my_tree, 137);

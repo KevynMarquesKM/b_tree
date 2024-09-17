@@ -175,11 +175,11 @@ Valor de retorno:
     int - Chave predecessora
 */
 int get_predecessor(node node, int idx){
-    node cur = node->next[idx];             //Vai para o filho à esquerda
-    while (!cur->leaf){                     //Continua até encontrar um nó folha
-        cur = cur->next[cur->key_num];      //Move-se para o próximo filho à direita
+    struct nodeStruct * cur = node->next[idx];              //Vai para o filho à esquerda
+    while (!cur->leaf){                                     //Continua até encontrar um nó folha
+        cur = cur->next[cur->key_num];                      //Move-se para o próximo filho à direita
     }
-    return cur->key[cur->key_num - 1];      //Retorna a última chave do nó folha
+    return cur->key[cur->key_num - 1];                      //Retorna a última chave do nó folha
 }
 
 /*
@@ -192,11 +192,11 @@ Valor de retorno:
     int - Chave sucessora
 */
 int get_successor(node node, int idx){
-    node cur = node->next[idx + 1];  //Vai para o filho à direita
-    while (!cur->leaf){              //Continua até encontrar um nó folha
-        cur = cur->next[0];          //Move-se para o próximo filho à esquerda
+    struct nodeStruct * cur = node->next[idx + 1];  //Vai para o filho à direita
+    while (!cur->leaf){                             //Continua até encontrar um nó folha
+        cur = cur->next[0];                         //Move-se para o próximo filho à esquerda
     }
-    return cur->key[0];              //Retorna a primeira chave do nó folha
+    return cur->key[0];                             //Retorna a primeira chave do nó folha
 }
 
 /*
@@ -234,8 +234,8 @@ Valor de retorno:
     void - Nenhum
 */
 void borrow_from_prev(node node, int idx){
-    node child = node->next[idx];         //Obtém o nó filho atual
-    node sibling = node->next[idx - 1];   //Obtém o nó irmão anterior
+    struct nodeStruct *  child = node->next[idx];         //Obtém o nó filho atual
+    struct nodeStruct *  sibling = node->next[idx - 1];   //Obtém o nó irmão anterior
 
     //Desloca as chaves e os ponteiros do filho para a direita
     for (int i = child->key_num - 1; i >= 0; --i){  //Move as chaves para a direita
@@ -272,8 +272,8 @@ Valor de retorno:
     void - Nenhum
 */
 void borrow_from_next(node node, int idx){
-    node child = node->next[idx];                 //Obtém o nó filho atual
-    node sibling = node->next[idx + 1];           //Obtém o nó irmão seguinte
+    struct nodeStruct *  child = node->next[idx];                 //Obtém o nó filho atual
+    struct nodeStruct *  sibling = node->next[idx + 1];           //Obtém o nó irmão seguinte
 
     //Coloca a chave do pai no final do filho
     child->key[child->key_num] = node->key[idx];  //A chave do pai passa para o nó filho
@@ -311,8 +311,8 @@ Valor de retorno:
     void - Nenhum
 */
 void merge_nodes(node node, int idx, int order, int * node_num){
-    node child = node->next[idx];         //Obtém o nó filho atual
-    node sibling = node->next[idx + 1];   //Obtém o nó irmão seguinte
+    struct nodeStruct *  child = node->next[idx];         //Obtém o nó filho atual
+    struct nodeStruct *  sibling = node->next[idx + 1];   //Obtém o nó irmão seguinte
 
     //Coloca a chave do pai no nó filho
     child->key[(order - 1) / 2] = node->key[idx];  //A chave do pai é inserida no meio do nó filho
