@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <C:\Users\UFSCar\Documents\Disciplinas\ORI\t\b_tree_struct.h>
+#include "b_tree_struct.h"
 
 //Protótipos Básicos
 node create_node(int, bool);

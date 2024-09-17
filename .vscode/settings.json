@@ -1,7 +1,10 @@
 {
   "files.associations": {
     "stdlib.h": "c",
-    "stdbool.h": "c"
+    "stdbool.h": "c",
+    "b_tree_removal_extension.h": "c",
+    "b_tree_file_extension.h": "c",
+    "b_tree_basic.h": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
